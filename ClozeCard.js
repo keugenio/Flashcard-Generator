@@ -5,16 +5,20 @@ function ClozeCard(text, cloze){
 
 	this.fullText = text;
 	this.cloze = cloze;
-	this.partial = remove(this.fullText, this.cloze);
+	this.partial = setPartial(this.fullText, this.cloze);
 
-	function remove(text,cloze){
+	this.resetPartial = function(cloze){
+		this.cloze = cloze;
+		this.partial = setPartial(this.fullText,this.cloze);
+	}
+
+	function setPartial(text, cloze){
 		if (text.includes(cloze))
-			return text.replace(cloze, "");
+			return text.replace(cloze, "...");
 		else {
-			console.log (cloze + " not found in " +"'" + text + "'");
-			return "";
+			return false;
 		}
 	}
 }
 
-module.exports = ClozeCard;
+module.exports = ClozeCard;	

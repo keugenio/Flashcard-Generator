@@ -5,38 +5,24 @@ var inquirer = require("inquirer");
 run();
 
 function run(){
+		printSpacer("=");
 		inquirer
-		  .prompt([
-		    // Here we create a basic text prompt.
-		    {
+    	.prompt([
+			    {
 			      type: "list",
-			      message: "What would you like to do?",
-			      choices: ["Create flashcard", "Read Flashcard", "Quit"],
-			      name: "command"
-		    },
-		  ])
-		  .then(function(inquirerResponse) {
-			    // If the inquirerResponse confirms, we displays the inquirerResponse's username 
-			    if (inquirerResponse.command == "Create flashcard") {
-			      console.log("\nCreating Flash Card \n");
-				    inquirer
-				    	.prompt([
-							    {
-							      type: "list",
-							      message: "what type of flash card are you creating?",
-							      choices: ["cloze","basic"],
-							      name: "type"
-							    }
-				    		]).then(function(inquirerResponse){
-										createCard(inquirerResponse.type);
-						  });
-
-		      	} else if (inquirerResponse.command == "Read flashcard"){
-		      	
-		      	} else {
-		      		console.log("\n *** session done. *** \n")
-		      	}
-    	});
+			      message: "What type of flash card are you creating?",
+			      choices: ["cloze","basic","quit"],
+			      name: "type"
+			    }
+    		]).then(function(inquirer){
+    				if (inquirer.type != "quit")
+							createCard(inquirer.type);
+						else{
+						 	printSpacer("~");
+							console.log("\n *** session done. *** \n");
+							printSpacer("~");
+						}
+		  });
 }
 
 function createCard(type){
@@ -58,8 +44,10 @@ function createCard(type){
 	      .then(function(inquirer) {
 					var basicCard = require("./BasicCard");
 					var newBasicCard = basicCard(inquirer.front,inquirer.back);
-					writeToLog(newBasicCard, type);   	      	
-					printSpacer();  					
+					printSpacer("~");
+					console.log ("\n *** basic flashcard created **** \n");
+					printCard(newBasicCard, type);   	
+					printSpacer("~", run);		   	
 	      });
 	} else {
     inquirer
@@ -73,62 +61,73 @@ function createCard(type){
 	            type: "input",
             	message: "What is the cloze deletion value?",
 	            name: "cloze"
-	          },
+	          }
 	      ])
 	      .then(function(inquirer) {
 					var ClozeCard = require("./ClozeCard");	 
-					var clozeFull = inquirer.statement;     	
-	        if (clozeFull.includes(inquirer.cloze)){
-	          var newClozeCard = ClozeCard(inquirer.statement, inquirer.cloze);
+					var newClozeCard = ClozeCard(inquirer.statement, inquirer.cloze);  
+
+	        if (newClozeCard.partial){
+	        	printSpacer("~");
+	        	console.log("\n*** cloze flashcard created ***\n");
+	        	printCard(newClozeCard, "cloze"); 
+	        	printSpacer("~", run);	        	
 	        } else {
-	          console.log(inquirer.cloze + " is not found in '" + inquirer.statement + "'");
-	          process.exit();
-	        }  	
-	        writeToLog(newClozeCard, type);      	
-	      	printSpacer();     	
+	        	printSpacer("!");
+	          console.log("*** error: '" + newClozeCard.cloze + "' is not found in '" + newClozeCard.fullText + "' \n" +
+	          						"*** cloze card created but no partial statement assigned. please reset.\n");
+	          resetPartial(newClozeCard);
+	        }  
+	
 	      });		
 	}
 }
 
-function printSpacer(){
-	console.log ("<---------------------------->");
+function printSpacer(character, run){
+	var charString = character;
+	for (var i = 0; i < 40; i++)
+		charString += character;
+	console.log(charString);
+	if (run)
+		run();	
 }
 
-function readCard(card, type){
+function printCard(card, type){
   if (type=="basic"){
-    console.log("New flashcard: \n" + 
+    console.log("<<Basic flashcard>> \n" + 
     						"Front: " + card.front + "\n" + 
-                "Back: " + card.back);
+                "Back: " + card.back + "\n");
   } else if (type == "cloze") {
-    console.log("New flashcard: \n" + 
-    						"full text: " + card.fullText + "\n" + 
-    						"partial text: " + card.partial);    
-  } else
-    console ("error: card not created");
+    console.log("<<Cloze flashcard>> \n" + 
+    						"Cloze: " + card.cloze + "\n" +
+    						"Full text: " + card.fullText + "\n" + 
+    						"Partial text: " + card.partial + "\n");    
+  }
 }
 
-function writeToLog(card, type){
-  var fs = require("fs");
-  var message="";
-  if (type == "basic"){
-  	message = card.front + "," + card.back + ",";
-
-	  fs.writeFile("basic.txt", message, function(err) {
-
-	      // If the code experiences any errors it will log the error to the console.
-	      if (err) {
-	        return console.log(err);
-	      }
-	      readCard(card, type)
-
-	  });
-	}else {
-		message = card.fullText + "," + card.partial + ",";
-	  fs.writeFile("cloze.txt", message, function(err) {
-	    if (err) {
-	      return console.log(err);
-	    }
-	    readCard(card, type)
-	  });	
-	}
+function resetPartial(card){
+	printCard(card, "cloze");
+	printSpacer("!");
+ 	inquirer
+	      .prompt([
+	          {
+	            type: "input",
+            	message: "What is the new cloze deletion value?",
+	            name: "cloze"
+	          },
+	      ])
+	      .then(function(inquirer) {
+	      		card.resetPartial(inquirer.cloze);
+	      		if (!card.partial){
+	      			printSpacer("!");
+	      			console.log("'" + card.cloze + "' is not found in '" + card.fullText + "' \n" +
+	          						"no partial statement created. \n");
+	      			resetPartial(card);
+	      		} else{
+	      			printSpacer("~");
+	      			console.log("\n*** success!! partial statement created ***\n");
+	      			printCard(card, "cloze");
+	      			printSpacer("~", run);  
+	      		}
+	      });	
 }

@@ -5,6 +5,7 @@ var inquirer = require("inquirer");
 run();
 
 function run(){
+		// prompt for type of card to build
 		printSpacer("=");
 		inquirer
     	.prompt([
@@ -26,6 +27,7 @@ function run(){
 }
 
 function createCard(type){
+	// depending on card type prompt for card components
 	if (type === "basic"){
 	    inquirer
 	      .prompt([
@@ -43,7 +45,7 @@ function createCard(type){
 	      ])
 	      .then(function(inquirer) {
 					var basicCard = require("./BasicCard");
-					var newBasicCard = basicCard(inquirer.front,inquirer.back);
+					var newBasicCard = basicCard(inquirer.front.trim(),inquirer.back.trim());
 					printSpacer("~");
 					console.log ("\n *** basic flashcard created **** \n");
 					printCard(newBasicCard, type);   	
@@ -65,14 +67,14 @@ function createCard(type){
 	      ])
 	      .then(function(inquirer) {
 					var ClozeCard = require("./ClozeCard");	 
-					var newClozeCard = ClozeCard(inquirer.statement, inquirer.cloze);  
+					var newClozeCard = ClozeCard(inquirer.statement.trim(), inquirer.cloze.trim());  
 
-	        if (newClozeCard.partial){
+	        if (newClozeCard.partial){  // if partial was created, print card and run main menu
 	        	printSpacer("~");
 	        	console.log("\n*** cloze flashcard created ***\n");
 	        	printCard(newClozeCard, "cloze"); 
 	        	printSpacer("~", run);	        	
-	        } else {
+	        } else { // else print error and reset partial
 	        	printSpacer("!");
 	          console.log("*** error: '" + newClozeCard.cloze + "' is not found in '" + newClozeCard.fullText + "' \n" +
 	          						"*** cloze card created but no partial statement assigned. please reset.\n");
@@ -84,6 +86,7 @@ function createCard(type){
 }
 
 function printSpacer(character, run){
+	//nprint passed character 40 times. if there is a callback, run it.
 	var charString = character;
 	for (var i = 0; i < 40; i++)
 		charString += character;
@@ -93,6 +96,7 @@ function printSpacer(character, run){
 }
 
 function printCard(card, type){
+	//print out card if depending on type of card
   if (type=="basic"){
     console.log("<<Basic flashcard>> \n" + 
     						"Front: " + card.front + "\n" + 
@@ -106,6 +110,8 @@ function printCard(card, type){
 }
 
 function resetPartial(card){
+	// first show user the current card, prompt for new cloze and check if it's found in fullText. 
+	// If not, run function again else print new card and run main function.
 	printCard(card, "cloze");
 	printSpacer("!");
  	inquirer
@@ -117,7 +123,7 @@ function resetPartial(card){
 	          },
 	      ])
 	      .then(function(inquirer) {
-	      		card.resetPartial(inquirer.cloze);
+	      		card.resetPartial(inquirer.cloze.trim());
 	      		if (!card.partial){
 	      			printSpacer("!");
 	      			console.log("'" + card.cloze + "' is not found in '" + card.fullText + "' \n" +

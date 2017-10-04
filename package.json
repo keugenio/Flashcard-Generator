@@ -1,0 +1,29 @@
+{
+  "name": "flashcard-generator",
+  "version": "1.0.0",
+  "description": "creates basic and cloze flascards",
+  "main": "cli.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "node clis.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/keugenio/Flashcard-Generator.git"
+  },
+  "keywords": [
+    "node",
+    "flashcard"
+  ],
+  "author": "Kui Eugenio",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/keugenio/Flashcard-Generator/issues"
+  },
+  "homepage": "https://github.com/keugenio/Flashcard-Generator#readme",
+  "dependencies": {
+    "require": "^2.4.20"
+  }
+}
